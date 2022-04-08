@@ -15,5 +15,6 @@ urlpatterns = [
     # use index.html
     path("watchlist", views.watchlist, name="watchlist"),
     path("listing/<int:id_listing>/post_watchlist", views.post_watchlist, name="post_watchlist"),
-    path("listing/<int:id_listing>/post_bid", views.post_bid, name="post_bid")
+    path("listing/<int:id_listing>/post_bid", views.post_bid, name="post_bid"),
+    path("listing/<int:id_listing>/close_auction", views.close_auction, name="close_auction"),
 ]

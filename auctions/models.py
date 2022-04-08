@@ -27,7 +27,7 @@ class AuctionListing(models.Model):
     watchlist_users = models.ManyToManyField(User, blank=True, related_name="watchlist_listings")
 
     def __str__(self):
-        return f"LISTING id:{self.id}, owner:{self.owner}, category:{self.get_category_display()}, active:{self.active}"
+        return f"LISTING id:{self.pk}, owner:{self.owner}, category:{self.get_category_display()}, active:{self.active}"
 
 
 class Bid(models.Model):
@@ -36,4 +36,4 @@ class Bid(models.Model):
     bid = models.DecimalField(max_digits=9, decimal_places=2)
 
     def __str__(self):
-        return f"BID id:{self.id}, owner:{self.owner} - ${self.bid}, listing:{self.listing}"
+        return f"BID id:{self.pk}, owner:{self.owner} - ${self.bid}, listing:{self.listing}"

@@ -7,12 +7,12 @@
 <!--Watchlist form-->
 {% if user.is_authenticated %}
 <div class="mb-2">
-    <form action="{% url 'post_watchlist' listing.id %}" method="POST">
+    <form action="{% url 'post_watchlist' listing.id %}" method="post">
         {% csrf_token %}
         {% if check_watchlist %}
-        <button class="badge badge-secondary" type="submit" name="button" value="Watchlist">Remove Watchlist</button>
+        <button class="badge badge-secondary" type="submit" name="button">Remove Watchlist</button>
         {% else %}
-        <button class="badge badge-primary" type="submit" name="button" value="Watchlist">Add Watchlist</button>
+        <button class="badge badge-primary" type="submit" name="button">Add Watchlist</button>
         {% endif %}
     </form>
 </div>
@@ -25,6 +25,7 @@
                     {% else %}
                     {% static 'auctions/no_image.png' %}
                     {% endif %}" style="max-height: 200px;" class="img-fluid rounded">
+
 </div>
 <p>{{ listing.description }}</p>
 <h3 class="font-weight-bold">${{ listing.current_bid }}</h3>
@@ -42,10 +43,10 @@
 {% endif %}
 
 {% if bid %}
-    <small class="text-muted">{{ bid.count }} bid(s) so far.
-        {% if bid.last.owner == user %}Your bid is the current bid.{% endif %}</small>
+<small class="text-muted">{{ bid.count }} bid(s) so far.
+    {% if bid.last.owner == user %}Your bid is the current bid.{% endif %}</small>
 {% else %}
-    <small class="text-muted">0 bid(s) so far.</small>
+<small class="text-muted">0 bid(s) so far.</small>
 {% endif %}
 
 <form action="{% url 'post_bid' listing.id %}" method="post">
@@ -56,6 +57,15 @@
 {% endif %}
 <!--End Bid form-->
 
+<!--Listing is active and user is listing's owner-->
+{% if user.is_authenticated and listing.owner == user and listing.active %}
+<form action="{% url 'close_auction' listing.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-link">Close the auction</button>
+</form>
+{% endif %}
+<!--End Listing is active and user is listing's owner-->
+
 <!--Listing deactivated and user won-->
 {% if user.is_authenticated and bid.last.owner == user and not listing.active %}
 <div class="messages alert alert-success">
@@ -63,6 +73,7 @@
 </div>
 {% endif %}
 <!-- End Listing deactivated and user won-->
+
 <h3>Details</h3>
 <ul>
     <li>Listed by: <a href="#">{{ listing.owner }}</a></li>

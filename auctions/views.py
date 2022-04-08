@@ -38,17 +38,18 @@ def listing_page(request, id_listing):
         })
 
 
-# add and remove listing to watchlist
+@login_required(login_url="/login")
 def post_watchlist(request, id_listing):
-    listing = AuctionListing.objects.get(pk=id_listing)
+    # add and remove listing to watchlist
     if request.method == "POST":
         if request.user.watchlist_listings.filter(pk=id_listing).exists():
-            request.user.watchlist_listings.remove(listing)
+            request.user.watchlist_listings.remove(id_listing)
         else:
-            request.user.watchlist_listings.add(listing)
+            request.user.watchlist_listings.add(id_listing)
     return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
 
 
+@login_required(login_url="/login")
 def post_bid(request, id_listing):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -82,15 +83,30 @@ def post_bid(request, id_listing):
         return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
 
 
+@login_required(login_url="/login")
+def close_auction(request, id_listing):
+    if request.method == "POST":
+        # change active to False
+        listing = AuctionListing.objects.get(pk=id_listing)
+        listing.active = False
+        listing.save()
+        # add listing to the winner's watchlist
+        if Bid.objects.filter(listing=id_listing).exists():
+            last_bid = Bid.objects.filter(listing=id_listing).last().owner
+            if not last_bid.watchlist_listings.filter(pk=id_listing).exists():
+                last_bid.watchlist_listings.add(listing)
+    return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
+
+
 def categories(request):
     category_quantity = []
     for category in AuctionListing.CATEGORIES:
         quantity = AuctionListing.objects.filter(category=category[0], active=True).count()
         new_list = [category[1], quantity]
         category_quantity.append(new_list)
-    if AuctionListing.objects.filter(category="", active=True):
-        new_list = ["No Category", AuctionListing.objects.filter(category="", active=True).count()]
-        category_quantity.append(new_list)
+    # add listings without category
+    new_list = ["No Category", AuctionListing.objects.filter(category="", active=True).count()]
+    category_quantity.append(new_list)
     return render(request, "auctions/categories.html", {
         "category_quantity": category_quantity
     })

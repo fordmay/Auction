@@ -26,7 +26,7 @@
                     {% endif %}" style="max-height: 200px;" class="img-fluid rounded">
 </div>
 <p style="max-width: 600px;">{{ listing.description }}</p>
-<h3 class="font-weight-bold">${{ bid }}</h3>
+<h3 class="font-weight-bold">${{ listing.current_bid }}</h3>
 
 <!--Bid form-->
 {% if user.is_authenticated %}

@@ -22,14 +22,8 @@ def listing_page(request, id_listing):
 
     if request.user.is_authenticated:
 
-        if Bid.objects.filter(listing=id_listing).exists():
-            bid = Bid.objects.filter(listing=id_listing).last().bid
-        else:
-            bid = AuctionListing.objects.get(pk=id_listing).starting_bid
-
         return render(request, "auctions/listing_page.html", {
             "listing": listing,
-            "bid": bid,
             "check_watchlist": request.user.watchlist_listings.filter(pk=id_listing).exists(),
             "bid_form": BidForm()
         })
@@ -57,25 +51,27 @@ def post_bid(request, id_listing):
         # check whether it's valid:
         if bid_form.is_valid():
             # process the data in form.cleaned_data as required
-            get_bid = bid_form.cleaned_data["bid"]
-            # starting_bid = AuctionListing.objects.get(pk=id_listing)
-
+            bid_from_form = bid_form.cleaned_data["bid"]
+            # get last bid
             if Bid.objects.filter(listing=id_listing).exists():
-                bid = Bid.objects.filter(listing=id_listing).last().bid
+                last_bid = Bid.objects.filter(listing=id_listing).last().bid
             else:
-                bid = AuctionListing.objects.get(pk=id_listing).starting_bid
+                last_bid = AuctionListing.objects.get(pk=id_listing).current_bid
 
-            if get_bid > bid:
+            if bid_from_form > last_bid:
                 # save to bid
-                bid = bid_form.save(commit=False)
-                bid.owner = User.objects.get(username=request.user)
-                bid.listing = AuctionListing.objects.get(pk=id_listing)
-                bid.save()
+                new_bid = bid_form.save(commit=False)
+                new_bid.owner = User.objects.get(username=request.user)
+                new_bid.listing = AuctionListing.objects.get(pk=id_listing)
+                new_bid.save()
                 # save to current_price
+                listing = AuctionListing.objects.get(pk=id_listing)
+                listing.current_bid = bid_from_form
+                listing.save()
                 # redirect to a new URL:
                 return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
             else:
-                messages.add_message(request, messages.WARNING, "Starting bid can't be lower than 0.")
+                messages.add_message(request, messages.WARNING, "The bid must be greater than last bid.")
                 return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
     else:
         return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
@@ -123,8 +119,8 @@ def create_listing(request):
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            starting_bid = form.cleaned_data["starting_bid"]
-            if starting_bid >= 0:
+            current_bid = form.cleaned_data["current_bid"]
+            if current_bid >= 0:
                 listing = form.save(commit=False)
                 listing.owner = User.objects.get(username=request.user)
                 listing.save()

@@ -4,7 +4,7 @@
 <h2>Categories</h2>
 
 {% for category in category_quantity %}
-<div class="list-group" style="max-width: 600px;">
+<div class="list-group">
     <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
        href="{% url 'filter_by_category' category.0 %}">
         {{ category.0 }}

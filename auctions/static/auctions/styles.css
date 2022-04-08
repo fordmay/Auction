@@ -1,3 +1,6 @@
 body {
     padding: 10px;
 }
+h2, p, .messages, .form-control, .list-group {
+    max-width: 800px;
+}

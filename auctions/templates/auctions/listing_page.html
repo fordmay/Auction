@@ -17,6 +17,7 @@
     </form>
 </div>
 {% endif %}
+<!--End Watchlist form-->
 
 <div style="max-height: 200px;">
     <img src="{% if listing.image %}
@@ -25,14 +26,13 @@
                     {% static 'auctions/no_image.png' %}
                     {% endif %}" style="max-height: 200px;" class="img-fluid rounded">
 </div>
-<p style="max-width: 600px;">{{ listing.description }}</p>
+<p>{{ listing.description }}</p>
 <h3 class="font-weight-bold">${{ listing.current_bid }}</h3>
 
 <!--Bid form-->
-{% if user.is_authenticated %}
-
+{% if user.is_authenticated and listing.active %}
 {% if messages %}
-<div class="messages alert alert-warning w-75" role="alert">
+<div class="messages alert alert-warning" role="alert">
     {% for message in messages %}
     <div {% if message.tags %} class="{{ message.tags }}" {% endif %}>
         <strong>{{ message }}</strong>
@@ -54,7 +54,15 @@
     <input class="btn btn-primary mb-2" type="submit" value="Place Bid">
 </form>
 {% endif %}
+<!--End Bid form-->
 
+<!--Listing deactivated and user won-->
+{% if user.is_authenticated and bid.last.owner == user and not listing.active %}
+<div class="messages alert alert-success">
+    <h1>YOU WON!!!</h1>
+</div>
+{% endif %}
+<!-- End Listing deactivated and user won-->
 <h3>Details</h3>
 <ul>
     <li>Listed by: <a href="#">{{ listing.owner }}</a></li>

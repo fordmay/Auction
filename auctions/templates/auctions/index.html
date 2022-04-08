@@ -1,0 +1,34 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2>{{ page_name }}</h2>
+{% for listing in listings reversed %}
+<div class="card shadow p-1 mb-3 bg-white rounded">
+    <div class="w-75">
+        <div class="row no-gutters">
+            <div class="col-md-4 modal-dialog-centered" style="max-width: 200px; max-height: 200px;">
+                <img src="
+                    {% if listing.image %}
+                    {{ listing.image }}
+                    {% else %}
+                    {% static 'auctions/no_image.png' %}
+                    {% endif %}" class="card-img">
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold">
+                        <a href="{% url 'listing_page' listing.id %}" style="color: black;">{{ listing.title }}</a>
+                    </h5>
+                    <h6 class="card-title font-weight-bold">Price: ${{ listing.starting_bid }}</h6>
+                    <p class="card-text">{{ listing.description }}</p>
+                    <p class="card-text"><small class="text-muted">{{ listing.time }}</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<h5>Empty</h5>
+{% endfor %}
+{% endblock %}

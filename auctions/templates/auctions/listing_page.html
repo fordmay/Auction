@@ -1,0 +1,61 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2>{{ listing.title }}</h2>
+
+<!--Watchlist form-->
+{% if user.is_authenticated %}
+<div class="mb-2">
+    <form action="{% url 'post_watchlist' listing.id %}" method="POST">
+        {% csrf_token %}
+        {% if check_watchlist %}
+        <button class="badge badge-secondary" type="submit" name="button" value="Watchlist">Remove Watchlist</button>
+        {% else %}
+        <button class="badge badge-primary" type="submit" name="button" value="Watchlist">Add Watchlist</button>
+        {% endif %}
+    </form>
+</div>
+{% endif %}
+
+<div style="max-height: 200px;">
+    <img src="{% if listing.image %}
+                    {{ listing.image }}
+                    {% else %}
+                    {% static 'auctions/no_image.png' %}
+                    {% endif %}" style="max-height: 200px;" class="img-fluid rounded">
+</div>
+<p style="max-width: 600px;">{{ listing.description }}</p>
+<h3 class="font-weight-bold">${{ bid }}</h3>
+
+<!--Bid form-->
+{% if user.is_authenticated %}
+
+{% if messages %}
+<div class="messages alert alert-warning w-75" role="alert">
+    {% for message in messages %}
+    <div {% if message.tags %} class="{{ message.tags }}" {% endif %}>
+        <strong>{{ message }}</strong>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form action="{% url 'post_bid' listing.id %}" method="post">
+    {% csrf_token %}
+    <small class="text-muted">2 bid(s) so far. Your bid is the current bid.</small>
+    {{ bid_form.as_p }}
+    <input class="btn btn-primary mb-2" type="submit" value="Place Bid">
+</form>
+{% endif %}
+
+<h3>Details</h3>
+<ul>
+    <li>Listed by: <a href="#">{{ listing.owner }}</a></li>
+    <li>Category: {% if listing.get_category_display %}
+        {{ listing.get_category_display }}
+        {% else %} No Category Listed
+        {% endif %}
+    </li>
+</ul>
+{% endblock %}

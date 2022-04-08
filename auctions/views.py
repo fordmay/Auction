@@ -21,8 +21,13 @@ def listing_page(request, id_listing):
     listing = AuctionListing.objects.get(pk=id_listing)
 
     if request.user.is_authenticated:
+        if Bid.objects.filter(listing=id_listing).exists():
+            bid = Bid.objects.filter(listing=id_listing)
+        else:
+            bid = ''
 
         return render(request, "auctions/listing_page.html", {
+            "bid": bid,
             "listing": listing,
             "check_watchlist": request.user.watchlist_listings.filter(pk=id_listing).exists(),
             "bid_form": BidForm()

@@ -41,9 +41,15 @@
 </div>
 {% endif %}
 
+{% if bid %}
+    <small class="text-muted">{{ bid.count }} bid(s) so far.
+        {% if bid.last.owner == user %}Your bid is the current bid.{% endif %}</small>
+{% else %}
+    <small class="text-muted">0 bid(s) so far.</small>
+{% endif %}
+
 <form action="{% url 'post_bid' listing.id %}" method="post">
     {% csrf_token %}
-    <small class="text-muted">2 bid(s) so far. Your bid is the current bid.</small>
     {{ bid_form.as_p }}
     <input class="btn btn-primary mb-2" type="submit" value="Place Bid">
 </form>

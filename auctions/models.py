@@ -37,3 +37,13 @@ class Bid(models.Model):
 
     def __str__(self):
         return f"BID id:{self.pk}, owner:{self.owner} - ${self.bid}, listing:{self.listing}"
+
+
+class Comments(models.Model):
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.TextField(max_length=400)
+    time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"COMMENT id:{self.pk}, author:{self.author}, comment:{self.comment[:50]}, listing:{self.listing}"

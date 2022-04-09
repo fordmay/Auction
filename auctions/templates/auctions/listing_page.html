@@ -20,18 +20,16 @@
 <!--End Watchlist form-->
 
 <div style="max-height: 200px;">
-    <img src="{% if listing.image %}
-                    {{ listing.image }}
-                    {% else %}
-                    {% static 'auctions/no_image.png' %}
+    <img src="{% if listing.image %}{{ listing.image }}
+                    {% else %}{% static 'auctions/no_image.png' %}
                     {% endif %}" style="max-height: 200px;" class="img-fluid rounded">
-
 </div>
 <p>{{ listing.description }}</p>
 <h3 class="font-weight-bold">${{ listing.current_bid }}</h3>
 
-<!--Bid form-->
+<!--Bid stack-->
 {% if user.is_authenticated and listing.active %}
+<!--Warning message-->
 {% if messages %}
 <div class="messages alert alert-warning" role="alert">
     {% for message in messages %}
@@ -41,24 +39,33 @@
     {% endfor %}
 </div>
 {% endif %}
-
-{% if bid %}
-<small class="text-muted">{{ bid.count }} bid(s) so far.
-    {% if bid.last.owner == user %}Your bid is the current bid.{% endif %}</small>
+<!--Counts all bids and shows last your bid-->
+{% if bids %}
+<small class="text-muted">{{ bids.count }} bid(s) so far.
+    {% if bids.last.owner == user %}Your bid is the current bid.{% endif %}</small>
 {% else %}
 <small class="text-muted">0 bid(s) so far.</small>
 {% endif %}
-
+<!--Bid form-->
 <form action="{% url 'post_bid' listing.id %}" method="post">
     {% csrf_token %}
     {{ bid_form.as_p }}
     <input class="btn btn-primary mb-2" type="submit" value="Place Bid">
 </form>
 {% endif %}
-<!--End Bid form-->
+<!--End Bid stack-->
+
+<!--Listing deactivated and user won-->
+{% if user.is_authenticated and bids.last.owner == user and not listing.active %}
+<div class="messages alert alert-success">
+    <h1>YOU WON!!!</h1>
+</div>
+{% endif %}
+<!-- End Listing deactivated and user won-->
 
 <!--Listing is active and user is listing's owner-->
 {% if user.is_authenticated and listing.owner == user and listing.active %}
+<h3>Auction management</h3>
 <form action="{% url 'close_auction' listing.id %}" method="post">
     {% csrf_token %}
     <button type="submit" class="btn btn-link">Close the auction</button>
@@ -66,21 +73,36 @@
 {% endif %}
 <!--End Listing is active and user is listing's owner-->
 
-<!--Listing deactivated and user won-->
-{% if user.is_authenticated and bid.last.owner == user and not listing.active %}
-<div class="messages alert alert-success">
-    <h1>YOU WON!!!</h1>
-</div>
-{% endif %}
-<!-- End Listing deactivated and user won-->
-
 <h3>Details</h3>
 <ul>
-    <li>Listed by: <a href="#">{{ listing.owner }}</a></li>
-    <li>Category: {% if listing.get_category_display %}
-        {{ listing.get_category_display }}
-        {% else %} No Category Listed
-        {% endif %}
+    <li>Listed by: <a href="{% url 'filter_by_owner' listing.owner %}">{{ listing.owner }}</a></li>
+    <li>Category: {% if listing.get_category_display %}{{ listing.get_category_display }}
+        {% else %} No Category Listed {% endif %}
     </li>
 </ul>
+
+<h3>Comments</h3>
+
+<!--Comments form-->
+{% if user.is_authenticated and listing.active%}
+<form action="{% url 'post_comment' listing.id %} " method="post" style="max-width: 500px;">
+    {% csrf_token %}
+    {{ comments_form.as_p }}
+    <input class="btn btn-outline-primary mb-4" type="submit" value="Send Comment">
+</form>
+{% endif %}
+<!--End Comments form-->
+
+{% for comment in comments reversed %}
+<div class="card mb-1" style="max-width: 500px;">
+    <div class="card-header">{{ comment.author }}</div>
+    <div class="card-body">
+        <p class="card-text">{{ comment.comment }}</p>
+        <p class="card-text"><small class="text-muted">{{ comment.time }}</small></p>
+    </div>
+</div>
+{% empty %}
+<h5>Empty</h5>
+{% endfor %}
+
 {% endblock %}

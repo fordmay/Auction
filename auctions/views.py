@@ -1,13 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib import messages
 
-from .forms import ListingForm, BidForm
-from .models import User, AuctionListing, Bid
+from .forms import ListingForm, BidForm, CommentsForm
+from .models import User, AuctionListing, Bid, Comments
 
 
 def index(request):
@@ -18,24 +18,33 @@ def index(request):
 
 
 def listing_page(request, id_listing):
-    listing = AuctionListing.objects.get(pk=id_listing)
+    if AuctionListing.objects.filter(pk=id_listing).exists():
 
-    if request.user.is_authenticated:
-        if Bid.objects.filter(listing=id_listing).exists():
-            bid = Bid.objects.filter(listing=id_listing)
+        listing = AuctionListing.objects.get(pk=id_listing)
+        comments = Comments.objects.filter(listing=id_listing)
+
+        if request.user.is_authenticated:
+            # check bids for the listing
+            if Bid.objects.filter(listing=id_listing).exists():
+                bids = Bid.objects.filter(listing=id_listing)
+            else:
+                bids = ''
+
+            return render(request, "auctions/listing_page.html", {
+                "listing": listing,
+                "check_watchlist": request.user.watchlist_listings.filter(pk=id_listing).exists(),
+                "bids": bids,
+                "bid_form": BidForm(),
+                "comments": comments,
+                "comments_form": CommentsForm()
+            })
         else:
-            bid = ''
-
-        return render(request, "auctions/listing_page.html", {
-            "bid": bid,
-            "listing": listing,
-            "check_watchlist": request.user.watchlist_listings.filter(pk=id_listing).exists(),
-            "bid_form": BidForm()
-        })
+            return render(request, "auctions/listing_page.html", {
+                "listing": listing,
+                "comments": comments
+            })
     else:
-        return render(request, "auctions/listing_page.html", {
-            "listing": listing
-        })
+        return HttpResponseNotFound()
 
 
 @login_required(login_url="/login")
@@ -63,7 +72,7 @@ def post_bid(request, id_listing):
                 last_bid = Bid.objects.filter(listing=id_listing).last().bid
             else:
                 last_bid = AuctionListing.objects.get(pk=id_listing).current_bid
-
+            # check last bid and return warning message
             if bid_from_form > last_bid:
                 # save to bid
                 new_bid = bid_form.save(commit=False)
@@ -98,6 +107,20 @@ def close_auction(request, id_listing):
     return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
 
 
+@login_required(login_url="/login")
+def post_comment(request, id_listing):
+    if request.method == "POST":
+        comment_form = CommentsForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.author = User.objects.get(username=request.user)
+            new_comment.listing = AuctionListing.objects.get(pk=id_listing)
+            new_comment.save()
+            return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
+    else:
+        return HttpResponseRedirect(reverse("listing_page", args=(id_listing,)))
+
+
 def categories(request):
     category_quantity = []
     for category in AuctionListing.CATEGORIES:
@@ -121,6 +144,18 @@ def filter_by_category(request, category_name):
         "listings": AuctionListing.objects.filter(category=category_id, active=True),
         "page_name": f"Filter by: {category_name}"
     })
+
+
+def filter_by_owner(request, owner_name):
+    if User.objects.filter(username=owner_name).exists():
+        owner = User.objects.get(username=owner_name)
+        return render(request, "auctions/index.html", {
+            "listings": AuctionListing.objects.filter(owner=owner, active=True),
+            "page_name": f"Filter by: {owner_name}"
+        })
+    else:
+        return HttpResponseNotFound()
+
 
 
 @login_required(login_url="/login")

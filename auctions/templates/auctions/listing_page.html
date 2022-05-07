@@ -9,7 +9,7 @@
 <div class="mb-2">
     <form action="{% url 'post_watchlist' listing.id %}" method="post">
         {% csrf_token %}
-        {% if check_watchlist %}
+        {% if listing in user.watchlist_listings.all %}
         <button class="badge badge-secondary" type="submit" name="button">Remove Watchlist</button>
         {% else %}
         <button class="badge badge-primary" type="submit" name="button">Add Watchlist</button>

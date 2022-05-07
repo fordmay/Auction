@@ -32,7 +32,6 @@ def listing_page(request, id_listing):
 
             return render(request, "auctions/listing_page.html", {
                 "listing": listing,
-                "check_watchlist": request.user.watchlist_listings.filter(pk=id_listing).exists(),
                 "bids": bids,
                 "bid_form": BidForm(),
                 "comments": comments,
